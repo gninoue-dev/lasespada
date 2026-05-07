@@ -1,3 +1,39 @@
+<?php
+  session_start();
+  require_once "../config/database.php"; // connexion PDO
+
+  // Vérifier si l'utilisateur est connecté
+  if (!isset($_SESSION["user_id"])) {
+      header("Location: connexion.php");
+      exit;
+  }
+
+  $user_id = $_SESSION["user_id"];
+
+  // 🔹 Récupérer infos utilisateur
+  $stmt = $pdo->prepare("SELECT nom, prenom, statut, score_global FROM utilisateurs WHERE id = :id");
+  $stmt->execute(["id" => $user_id]);
+  $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+  // 🔹 Récupérer historique des sinistres
+  $stmt = $pdo->prepare("SELECT COUNT(*) as total, 
+                                SUM(CASE WHEN date_sinistre >= DATE_SUB(NOW(), INTERVAL 12 MONTH) THEN 1 ELSE 0 END) as derniers12mois 
+                        FROM sinistres WHERE utilisateur_id = :id");
+  $stmt->execute(["id" => $user_id]);
+  $sinistres = $stmt->fetch(PDO::FETCH_ASSOC);
+
+  // 🔹 Récupérer dernier sinistre pour mise à jour
+  $stmt = $pdo->prepare("SELECT MAX(date_declaration) as last_update FROM sinistres WHERE utilisateur_id = :id");
+  $stmt->execute(["id" => $user_id]);
+  $last_update = $stmt->fetch(PDO::FETCH_ASSOC);
+
+  // 🔹 Récupérer détails du score
+  $stmt = $pdo->prepare("SELECT type_sinistre, score_sinistre, statut FROM sinistres WHERE utilisateur_id = :id ORDER BY date_declaration DESC LIMIT 5");
+  $stmt->execute(["id" => $user_id]);
+  $details = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,7 +60,8 @@
         <span class="logo-dot">
             <img src="../assets/images/user-sign-icon-front-side-removebg-preview.png" alt="">
         </span>
-        <span class="logo-word">nom du client</span>
+        <span class="logo-word"><?= htmlspecialchars($user["nom"]) ?> <?= htmlspecialchars($user["prenom"]) ?></span>
+
         
       </div>
       <div class="subtitle">Compte Securisée</div>
@@ -33,12 +70,14 @@
     <div class="controls">
       <div class="control">
         <label for="period">status du compte</label>
-        <p class="status">normal</p>
+        <p class="status"><?= htmlspecialchars($user["statut"]) ?></p>
+
      
       </div>
       <div class="control">
         <label for="population">historique des sinistres</label>
-        <p class="population">3 sinistres sur les 12 derniers mois</p>
+        <p class="population"><?= $sinistres["derniers12mois"] ?> sinistres sur les 12 derniers mois</p>
+
       </div>
       <button id="exportBtn" class="btn">voir sinistres</button>
     </div>
@@ -59,8 +98,8 @@
           Adresse • Abidjan • Rivera
         </div>
         <div class="meta">
-          <div><span class="muted">Numéro d'assurée</span> <strong id="orgName">N°id4343535</strong></div>
-          <div><span class="muted">Dernière mise à jour :</span> <strong id="lastUpdate">il y a 10 minutes</strong></div>
+          <div><span class="muted">Numéro d'assurée</span> <strong id="orgName">N°<?= $user_id ?></strong></div>
+          <div><span class="muted">Dernière mise à jour :</span> <strong id="lastUpdate"><?= $last_update["last_update"] ?? "aucune déclaration" ?></strong></div>
         </div>
       </div>
     </section>
@@ -71,9 +110,14 @@
       <div class="panel">
         <div class="panel-head">
           <h2>Score de risque :</h2>
-          <div class="muted">O</div>
+          <div class="muted"><?= $user["score_global"] ?> pts</div>
         </div>
-        <ul class="insights" id="insights"></ul>
+        
+        <ul class="insights" id="insights">
+          <?php foreach ($details as $d): ?>
+            <li><?= htmlspecialchars($d["type_sinistre"]) ?> — Score <?= $d["score_sinistre"] ?> (<?= $d["statut"] ?>)</li>
+          <?php endforeach; ?>
+        </ul>
       </div>
 
       <div class="panel">
