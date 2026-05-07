@@ -1,3 +1,24 @@
+<?php
+session_start();
+require_once "../config/database.php"; // fichier connexion PDO
+
+// Vérifier si l'utilisateur est connecté
+if (!isset($_SESSION["user_id"])) {
+    header("Location: connexion.php");
+    exit;
+}
+
+$user_id = $_SESSION["user_id"];
+
+// 🔹 Récupérer les sinistres de l'utilisateur
+$stmt = $pdo->prepare("SELECT date_sinistre, type_sinistre, score_sinistre, statut 
+                       FROM sinistres 
+                       WHERE utilisateur_id = :id 
+                       ORDER BY date_sinistre DESC");
+$stmt->execute(["id" => $user_id]);
+$sinistres = $stmt->fetchAll(PDO::FETCH_ASSOC);
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,31 +53,21 @@
           </tr>
         </thead>
         <tbody>
-
-          <tr>
-            <td data-title="Column #1">01-05-2026</td>
-            <td data-title="Column #2">Accident</td>
-            <td data-title="Column #3">85</td>
-            <td data-title="Column #4">Élevé</td>
-            <td data-title="Column #5">normal</td>
-          </tr>
-
-          <tr>
-            <td data-title="Column #1">02-05-2026</td>
-            <td data-title="Column #2">Incendie</td>
-            <td data-title="Column #3">75</td>
-            <td data-title="Column #4">Moyen</td>
-            <td data-title="Column #5">normal</td>
-          </tr>
-          
+          <?php foreach ($sinistres as $s): ?>
             <tr>
-                <td data-title="Column #1">03-05-2026</td>
-                <td data-title="Column #2">Vol</td>
-                <td data-title="Column #3">65</td>
-                <td data-title="Column #4">Faible</td>
-                <td data-title="Column #5">normal</td>  
-           </tr>
-   
+              <td data-title="DATES"><?= htmlspecialchars($s["date_sinistre"]) ?></td>
+              <td data-title="TYPES"><?= htmlspecialchars($s["type_sinistre"]) ?></td>
+              <td data-title="SCORES"><?= $s["score_sinistre"] ?></td>
+              <td data-title="niveaux de risques">
+                <?php
+                  if ($s["score_sinistre"] >= 80) echo "Élevé";
+                  elseif ($s["score_sinistre"] >= 40) echo "Moyen";
+                  else echo "Faible";
+                ?>
+              </td>
+              <td data-title="Status"><?= htmlspecialchars($s["statut"]) ?></td>
+            </tr>
+          <?php endforeach; ?>
         </tbody>
       </table>
     </div>

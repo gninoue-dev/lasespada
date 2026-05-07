@@ -1,3 +1,58 @@
+ <?php
+session_start();
+require_once "../config/database.php"; // connexion PDO
+
+// Activer l'affichage des erreurs pour le debug
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $nom = trim($_POST["nom"]);
+    $prenom = trim($_POST["prenom"]);
+    $email = trim($_POST["email"]);
+    $mdp = trim($_POST["mdp"]);
+    $confirmation = trim($_POST["confirmation"]);
+
+    if (!empty($nom) && !empty($prenom) && !empty($email) && !empty($mdp) && !empty($confirmation)) {
+        if ($mdp !== $confirmation) {
+            $error = "Les mots de passe ne correspondent pas.";
+        } else {
+            try {
+                // Vérifier si l'email existe déjà
+                $stmt = $pdo->prepare("SELECT id FROM utilisateurs WHERE email = :email");
+                $stmt->execute(["email" => $email]);
+
+                if ($stmt->fetch()) {
+                    $error = "Cet email est déjà utilisé.";
+                } else {
+                    // Hash du mot de passe
+                    $hash = password_hash($mdp, PASSWORD_BCRYPT);
+
+                    // Insertion en BDD
+                    $stmt = $pdo->prepare("INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe) 
+                                           VALUES (:nom, :prenom, :email, :mdp)");
+                    $stmt->execute([
+                        "nom" => $nom,
+                        "prenom" => $prenom,
+                        "email" => $email,
+                        "mdp" => $hash
+                    ]);
+
+                    // Redirection vers la connexion
+                    header("Location: connexion.php");
+                    exit;
+                }
+            } catch (PDOException $e) {
+                $error = "Erreur SQL : " . $e->getMessage();
+            }
+        }
+    } else {
+        $error = "Veuillez remplir tous les champs.";
+    }
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 

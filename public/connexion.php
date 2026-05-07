@@ -1,3 +1,38 @@
+<?php
+session_start();
+require_once "../config/database.php"; // fichier qui contient la connexion PDO
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $email = trim($_POST["email"]);
+    $password = trim($_POST["password"]);
+
+    if (!empty($email) && !empty($password)) {
+        // Préparer la requête
+        $stmt = $pdo->prepare("SELECT id, nom, prenom, email, mot_de_passe FROM utilisateurs WHERE email = :email");
+        $stmt->execute(["email" => $email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && password_verify($password, $user["mot_de_passe"])) {
+            // Authentification réussie
+            $_SESSION["user_id"] = $user["id"];
+            $_SESSION["user_nom"] = $user["nom"];
+            $_SESSION["user_prenom"] = $user["prenom"];
+            $_SESSION["user_email"] = $user["email"];
+
+            // Redirection vers le tableau de bord
+            header("Location: ../public/historique.php");
+            exit;
+        } else {
+            $error = "Email ou mot de passe incorrect.";
+        }
+    } else {
+        $error = "Veuillez remplir tous les champs.";
+    }
+}
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,6 +41,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../assets/css/"
 
 </head>
 
