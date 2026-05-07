@@ -10,7 +10,7 @@
 </head>
 
 <style>
-    p, a{
+     a{
 
     color: purple;
     text-decoration: underline;
@@ -19,7 +19,7 @@
     }
 
     label{
-          color: purple;
+          color: #c7c7c7;
 
 
     }
@@ -64,7 +64,7 @@
               <label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 for="email">Email</label><input type="email"
                 class="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-zinc-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                id="email" placeholder="m@example.com" required="" name="email"/>
+                id="email" placeholder="nomprenom@example.com" required="" name="email"/>
             </div>
             <div class="grid gap-2">
               <div class="flex justify-between">
@@ -86,7 +86,7 @@
       </div>
       <div class="mx-auto flex gap-1 text-sm">
         <p>vous n'avez pas de compte?</p>
-        <a href="#" class="underline">S'inscrire</a>
+        <a href="inscription.php" class="underline" style="color: purple;">S'inscrire</a>
       </div>
     </div>
   </div>
