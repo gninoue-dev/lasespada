@@ -47,7 +47,7 @@ $details = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="../assets/css/dashbord.css">
-    <script src="../assets/js/dashbord.js" defer></script>
+
 </head>
 <body>
 
