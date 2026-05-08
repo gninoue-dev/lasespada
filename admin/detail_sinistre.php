@@ -1,155 +1,107 @@
 <?php
-// Exemple futur avec base de données
-// require "config/database.php";
+require_once "../includes/session.php";
+require_once "../includes/functions.php";
+require_once "../config/database.php";
+requireAdmin();
 
-// Récupération de l'ID du sinistre
-$id = $_GET['id'] ?? null;
+// Filtre statut
+$filtre = $_GET["filtre"] ?? "all";
 
-// Exemple de données simulées (à remplacer par SQL plus tard)
-$sinistre = [
-    "id" => $id,
-    "client" => "client2",
-    "type" => "Accident automobile",
-    "montant" => "450 000 F",
-    "statut" => "En attente",
-    "date" => "07/05/2026",
-    "description" => "Collision avec un autre véhicule à un carrefour.",
+$filtresSQL = [
+    "pending"  => "WHERE s.statut = 'en_attente'",
+    "valid"    => "WHERE s.statut = 'validé'",
+    "refused"  => "WHERE s.statut = 'rejeté'",
+    "fraud"    => "WHERE s.niveau_fraude IN ('frauduleux','fraude probable')",
 ];
 
-?>
+$where = $filtresSQL[$filtre] ?? "";
 
+$sinistres = $pdo->query("
+    SELECT s.*, u.nom, u.prenom
+    FROM sinistres s
+    JOIN utilisateurs u ON s.utilisateur_id = u.id
+    $where
+    ORDER BY s.id DESC
+")->fetchAll();
+
+// Stats
+$total     = $pdo->query("SELECT COUNT(*) FROM sinistres")->fetchColumn();
+$attente   = $pdo->query("SELECT COUNT(*) FROM sinistres WHERE statut = 'en_attente'")->fetchColumn();
+$valides   = $pdo->query("SELECT COUNT(*) FROM sinistres WHERE statut = 'validé'")->fetchColumn();
+$refuses   = $pdo->query("SELECT COUNT(*) FROM sinistres WHERE statut = 'rejeté'")->fetchColumn();
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Détail sinistre</title>
-
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-<link rel="stylesheet" href="../assets/css/detail_sinistres.css">
-<script src="../assets/js/detail_sinistres.js" defer></script>
-
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des sinistres</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <link rel="stylesheet" href="../assets/css/liste_sinistres.css">
 </head>
-
 <body>
-
 <div class="container">
+  <div class="header">
+    <h1>Liste des sinistres</h1>
+    <a href="dashbord.php" style="color:#2563eb;text-decoration:underline">← Dashboard</a>
+  </div>
 
-    <!-- HEADER -->
-    <div class="header">
+  <!-- STATS -->
+  <div class="stats">
+    <div class="card"><div>Total</div><div class="value"><?= $total ?></div></div>
+    <div class="card"><div>En attente</div><div class="value" style="color:#d97706"><?= $attente ?></div></div>
+    <div class="card"><div>Validés</div><div class="value" style="color:#16a34a"><?= $valides ?></div></div>
+    <div class="card"><div>Refusés</div><div class="value" style="color:#dc2626"><?= $refuses ?></div></div>
+  </div>
 
-        <div style="display:flex;gap:10px;align-items:center">
+  <!-- FILTRES -->
+  <div class="filters">
+    <a href="?filtre=all"     class="filter <?= $filtre === 'all'     ? 'active' : '' ?>">Tous</a>
+    <a href="?filtre=pending" class="filter <?= $filtre === 'pending' ? 'active' : '' ?>">En attente</a>
+    <a href="?filtre=valid"   class="filter <?= $filtre === 'valid'   ? 'active' : '' ?>">Validés</a>
+    <a href="?filtre=refused" class="filter <?= $filtre === 'refused' ? 'active' : '' ?>">Refusés</a>
+    <a href="?filtre=fraud"   class="filter <?= $filtre === 'fraud'   ? 'active' : '' ?>" style="color:#dc2626">Fraudes</a>
+  </div>
 
-            <button class="back" onclick="history.back()">
-                ← Retour
-            </button>
-
-            <h2 style="margin:0">
-                Détail sinistre #<?= htmlspecialchars($sinistre["id"]) ?>
-            </h2>
-
-        </div>
-
-    </div>
-
-    <!-- INFOS SINISTRE -->
-    <div class="card">
-
-        <h3>Informations du sinistre</h3>
-
-        <div class="grid">
-
-            <div>
-                <div class="label">Client</div>
-                <div class="value"><?= $sinistre["client"] ?></div>
-            </div>
-
-            <div>
-                <div class="label">Type</div>
-                <div class="value"><?= $sinistre["type"] ?></div>
-            </div>
-
-            <div>
-                <div class="label">Montant demandé</div>
-                <div class="value"><?= $sinistre["montant"] ?></div>
-            </div>
-
-            <div>
-                <div class="label">Date</div>
-                <div class="value"><?= $sinistre["date"] ?></div>
-            </div>
-
-            <div>
-                <div class="label">Statut</div>
-                <div class="value">
-                    <span class="badge pending">
-                        <?= $sinistre["statut"] ?>
-                    </span>
-                </div>
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- DESCRIPTION -->
-    <div class="card">
-
-        <h3>Description</h3>
-
-        <p style="color:#4b5563">
-            <?= $sinistre["description"] ?>
-        </p>
-
-    </div>
-
-    <!-- PIECES JOINTES -->
-    <div class="card">
-
-        <h3>Pièces jointes</h3>
-
-        <div style="margin-top:10px;color:#6b7280">
-            📄 Aucun fichier uploadé (à connecter plus tard)
-        </div>
-
-    </div>
-
-    <!-- ACTIONS ADMIN -->
-    <div class="card">
-
-        <h3>Actions administrateur</h3>
-
-        <p style="color:#6b7280;margin-bottom:15px">
-            Valider ou refuser ce sinistre
-        </p>
-
-        <textarea placeholder="Ajouter une remarque..."></textarea>
-
-        <div class="actions" style="margin-top:15px">
-
-            <button class="btn btn-validate">
-                ✔ Valider
-            </button>
-
-            <button class="btn btn-refuse">
-                ✖ Refuser
-            </button>
-
-            <button class="btn btn-warn">
-                ⚠ Mettre en attente
-            </button>
-
-        </div>
-
-    </div>
-
+  <!-- TABLE -->
+  <div class="table-box">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Client</th>
+          <th>Type</th>
+          <th>Montant</th>
+          <th>Score</th>
+          <th>Niveau</th>
+          <th>Statut</th>
+          <th>Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($sinistres as $s): ?>
+        <tr>
+          <td>#<?= $s["id"] ?></td>
+          <td><?= clean($s["nom"]) ?> <?= clean($s["prenom"]) ?></td>
+          <td><?= clean($s["type_sinistre"]) ?></td>
+          <td><?= number_format($s["montant"], 0, ',', ' ') ?> FCFA</td>
+          <td><?= $s["score_sinistre"] ?>/100</td>
+          <td><?= badgeNiveau($s["niveau_fraude"] ?? 'normal') ?></td>
+          <td><?= badgeStatut($s["statut"]) ?></td>
+          <td><?= clean($s["date_sinistre"]) ?></td>
+          <td>
+            <a href="detail_sinistre.php?id=<?= $s["id"] ?>" class="view-btn">Voir</a>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+        <?php if (empty($sinistres)): ?>
+        <tr><td colspan="9" style="text-align:center;padding:20px;color:#9ca3af">Aucun sinistre trouvé.</td></tr>
+        <?php endif; ?>
+      </tbody>
+    </table>
+  </div>
 </div>
-
-
-
 </body>
 </html>
