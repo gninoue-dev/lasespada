@@ -75,11 +75,11 @@ $details = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <title>Document</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="../assets/css/dashbord.css">
-        <script src="../assets/js/dashbord.js"></script>
+        <script src="../assets/js/dashbord.js" defer></script>
 </head>
 <body>
 
-<!-- ✅ Serotonyn — Dashboard Client (B2B) | CodePen-ready (HTML only)
+<!--  Serotonyn — Dashboard Client (B2B) | CodePen-ready (HTML only)
      ➜ Colle ce bloc dans l’onglet HTML de CodePen.
      ➜ Mets le CSS dans l’onglet CSS et le JS dans l’onglet JS.
      ⚠️ Charte Serotonyn: je n’ai pas ta PJ ici, donc j’ai créé un thème “clean santé”
@@ -112,7 +112,11 @@ $details = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <p class="population"><?= $sinistres["derniers12mois"] ?> sinistres sur les 12 derniers mois</p>
 
       </div>
+<<<<<<< HEAD
       <a href="historiques.php"><button id="exportBtn" class="btn">voir sinistres</button></a>
+=======
+      <a href="historiques.php"><button id="exportBtn" class="btn">voir sinistres</button></a> 
+>>>>>>> cb1207ba8a5dde073ed4d13ce2cc508e7edc0f2b
     </div>
   </header>
 
@@ -164,7 +168,11 @@ $details = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     <footer class="footer">
       <div class="muted">
+<<<<<<< HEAD
        <a href="declarer.php"><button class="btn" style="font-size: 1rem;">Déclarer un sinistre +</button></a>
+=======
+      <a href="déclarer.php"><button class="btn" style="font-size: 1rem;">Déclarer un sinistre +</button></a> 
+>>>>>>> cb1207ba8a5dde073ed4d13ce2cc508e7edc0f2b
       </div>
     </footer>
   </main>
