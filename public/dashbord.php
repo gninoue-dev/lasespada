@@ -42,11 +42,11 @@
     <title>Document</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link rel="stylesheet" href="../assets/css/dashbord.css">
-        <script src="../assets/js/dashbord.js"></script>
+        <script src="../assets/js/dashbord.js" defer></script>
 </head>
 <body>
 
-<!-- ✅ Serotonyn — Dashboard Client (B2B) | CodePen-ready (HTML only)
+<!--  Serotonyn — Dashboard Client (B2B) | CodePen-ready (HTML only)
      ➜ Colle ce bloc dans l’onglet HTML de CodePen.
      ➜ Mets le CSS dans l’onglet CSS et le JS dans l’onglet JS.
      ⚠️ Charte Serotonyn: je n’ai pas ta PJ ici, donc j’ai créé un thème “clean santé”
@@ -79,7 +79,7 @@
         <p class="population"><?= $sinistres["derniers12mois"] ?> sinistres sur les 12 derniers mois</p>
 
       </div>
-      <button id="exportBtn" class="btn">voir sinistres</button>
+      <a href="historiques.php"><button id="exportBtn" class="btn">voir sinistres</button></a> 
     </div>
   </header>
 
@@ -131,7 +131,7 @@
 
     <footer class="footer">
       <div class="muted">
-       <button class="btn" style="font-size: 1rem;">Déclarer un sinistre +</button>
+      <a href="déclarer.php"><button class="btn" style="font-size: 1rem;">Déclarer un sinistre +</button></a> 
       </div>
     </footer>
   </main>
