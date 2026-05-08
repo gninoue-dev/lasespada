@@ -1,75 +1,121 @@
 <?php
-// ══════════════════════════════════════════════════════
-//  scoring/scoring.php — Calcul du score global de fraude
-//  Appelé après chaque nouveau sinistre enregistré
-//  Usage : scoring.php?utilisateur_id=5
-// ══════════════════════════════════════════════════════
-
 session_start();
-require_once "../config/database.php"; // Connexion PDO
+require_once "../config/database.php";
 
-// ── VÉRIFICATION DU PARAMÈTRE ─────────────────────────
-// On s'assure qu'un utilisateur_id est bien passé en GET
+// ══════════════════════════════════════════════════════
+//  FONCTION 1 — calculerScore()
+//  Appelée par declarer.php pour scorer un sinistre
+// ══════════════════════════════════════════════════════
+function calculerScore(array $data): array {
+
+    $score   = 0;
+    $raisons = [];
+
+    // Montant élevé
+    if ($data["montant"] > 5000) {
+        $score += 20;
+        $raisons[] = "Montant élevé ({$data['montant']} FCFA)";
+    }
+
+    // Analyse EXIF photo
+    $exif = @exif_read_data($data["photo_path"]);
+    if (!$exif) {
+        $score += 20;
+        $raisons[] = "Photo sans métadonnées EXIF";
+    } elseif (isset($exif["DateTimeOriginal"])) {
+        $datePhoto    = strtotime($exif["DateTimeOriginal"]);
+        $dateSinistre = strtotime($data["date_sinistre"]);
+        if (abs($datePhoto - $dateSinistre) > 86400) {
+            $score += 15;
+            $raisons[] = "Date photo EXIF différente de la date sinistre";
+        }
+    }
+
+    // Mots-clés suspects
+    $motsCles = ['urgent', 'vite', 'immédiat', 'tout perdu', 'rapidement'];
+    foreach ($motsCles as $mot) {
+        if (stripos($data["description"], $mot) !== false) {
+            $score += 15;
+            $raisons[] = "Mot-clé suspect : \"$mot\"";
+            break;
+        }
+    }
+
+    // Heure suspecte
+    $heure = (int) date("H", strtotime($data["date_sinistre"]));
+    if ($heure >= 22 || $heure <= 6) {
+        $score += 10;
+        $raisons[] = "Sinistre déclaré la nuit ({$heure}h)";
+    }
+
+    // Sinistres répétés
+    if ($data["nb_sinistres_6mois"] >= 2) {
+        $score += 10;
+        $raisons[] = "Sinistres répétés ({$data['nb_sinistres_6mois']} en 6 mois)";
+    }
+
+    // IP identique
+    if (!empty($data["derniere_ip"]) && $data["ip"] === $data["derniere_ip"]) {
+        $score += 10;
+        $raisons[] = "IP identique au sinistre précédent";
+    }
+
+    // Niveau
+    if ($score <= 30) {
+        $niveau = "normal";
+    } elseif ($score <= 60) {
+        $niveau = "douteux";
+    } else {
+        $niveau = "frauduleux";
+    }
+
+    return [
+        "score"   => $score,
+        "niveau"  => $niveau,
+        "raisons" => $raisons
+    ];
+}
+
+// ══════════════════════════════════════════════════════
+//  FONCTION 2 — Score global utilisateur
+//  Appelée via URL : scoring.php?utilisateur_id=X
+// ══════════════════════════════════════════════════════
 if (isset($_GET["utilisateur_id"])) {
 
-    // intval() protège contre les injections non numériques
     $utilisateur_id = intval($_GET["utilisateur_id"]);
 
-    // ── RÉCUPÉRATION DES SINISTRES ────────────────────
-    // On prend tous les scores individuels de l'utilisateur
-    $stmt = $pdo->prepare("
-        SELECT score_sinistre 
-        FROM sinistres 
-        WHERE utilisateur_id = :id
-    ");
+    $stmt = $pdo->prepare("SELECT score_sinistre FROM sinistres WHERE utilisateur_id = :id");
     $stmt->execute(["id" => $utilisateur_id]);
     $sinistres = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if ($sinistres) {
 
-        // ── CALCUL DU SCORE GLOBAL ────────────────────
-        // On additionne tous les scores puis on fait la moyenne
         $score_total = 0;
         foreach ($sinistres as $s) {
             $score_total += intval($s["score_sinistre"]);
         }
 
-        // Arrondi à l'entier le plus proche
         $score_global = round($score_total / count($sinistres));
 
-        // ── DÉTERMINATION DU STATUT ───────────────────
-        // 3 niveaux selon la moyenne des scores
         if ($score_global < 40) {
-            $statut = "normal";       // Pas de risque détecté
+            $statut = "normal";
         } elseif ($score_global < 70) {
-            $statut = "douteux";      // À surveiller
+            $statut = "douteux";
         } else {
-            $statut = "frauduleux";   // Alerte déclenchée
+            $statut = "frauduleux";
         }
 
-        // ── MISE À JOUR DE L'UTILISATEUR EN BDD ──────
-        // On stocke le score global et le statut calculé
-        $update = $pdo->prepare("
-            UPDATE utilisateurs 
-            SET score_global = :score, 
-                statut = :statut 
-            WHERE id = :id
-        ");
+        $update = $pdo->prepare("UPDATE utilisateurs SET score_global = :score, statut = :statut WHERE id = :id");
         $update->execute([
             "score"  => $score_global,
             "statut" => $statut,
             "id"     => $utilisateur_id
         ]);
 
-        // ── ALERTE AUTOMATIQUE SI FRAUDULEUX ─────────
-        // On insère une alerte en BDD uniquement si le statut est frauduleux
-        // sinistre_id = NULL car c'est une alerte globale, pas liée à 1 sinistre
         if ($statut === "frauduleux") {
             $alert = $pdo->prepare("
-                INSERT INTO alertes 
-                    (sinistre_id, utilisateur_id, type_alerte, score_declencheur, message)
-                VALUES 
-                    (NULL, :uid, 'Suspicion fraude', :score, 'Score global trop élevé')
+                INSERT INTO alertes (sinistre_id, utilisateur_id, type_alerte, score_declencheur, message)
+                VALUES (NULL, :uid, 'Suspicion fraude', :score, 'Score global trop élevé')
             ");
             $alert->execute([
                 "uid"   => $utilisateur_id,
@@ -77,14 +123,9 @@ if (isset($_GET["utilisateur_id"])) {
             ]);
         }
 
-        // ── RÉPONSE ───────────────────────────────────
-        echo "Score global calculé : $score_global | Statut : $statut";
+        echo "Score global : $score_global | Statut : $statut";
 
     } else {
-        echo "Aucun sinistre trouvé pour cet utilisateur.";
+        echo "Aucun sinistre trouvé.";
     }
-
-} else {
-    echo "Utilisateur non spécifié.";
 }
-?>
