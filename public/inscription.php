@@ -1,68 +1,33 @@
 <?php
-<<<<<<< HEAD
 session_start();
 require_once "../config/database.php";
 
-// Activer les erreurs pour le debug
 error_reporting(E_ALL);
 ini_set("display_errors", 1);
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-=======
-  //  public/inscription.php — Création de compte utilisateur
-
-  session_start();
-  require_once "../config/database.php";
-
-  // Mode debug — à désactiver en production
-  error_reporting(E_ALL);
-  ini_set("display_errors", 1);
-
-  if ($_SERVER["REQUEST_METHOD"] === "POST") {
-
-    // ── RÉCUPÉRATION ET NETTOYAGE DES CHAMPS ─────────
->>>>>>> new_m1
     $nom          = trim($_POST["nom"]);
     $prenom       = trim($_POST["prenom"]);
     $email        = trim($_POST["email"]);
     $mdp          = trim($_POST["mdp"]);
     $confirmation = trim($_POST["confirmation"]);
 
-    // ── VALIDATION : tous les champs obligatoires ─────
     if (!empty($nom) && !empty($prenom) && !empty($email) && !empty($mdp) && !empty($confirmation)) {
 
-<<<<<<< HEAD
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = "Adresse email invalide.";
         } elseif ($mdp !== $confirmation) {
             $error = "Les mots de passe ne correspondent pas.";
         } else {
             try {
-=======
-        // ── VÉRIFICATION CORRESPONDANCE MOT DE PASSE ─
-        if ($mdp !== $confirmation) {
-            $error = "Les mots de passe ne correspondent pas.";
-        } else {
-            try {
-                // ── VÉRIFICATION EMAIL UNIQUE ─────────
-                // On ne peut pas avoir deux comptes avec le même email
->>>>>>> new_m1
                 $stmt = $pdo->prepare("SELECT id FROM utilisateurs WHERE email = :email");
                 $stmt->execute(["email" => $email]);
 
                 if ($stmt->fetch()) {
                     $error = "Cet email est déjà utilisé.";
                 } else {
-<<<<<<< HEAD
                     $hash = password_hash($mdp, PASSWORD_BCRYPT);
-=======
-                    // ── HASHAGE DU MOT DE PASSE ───────
-                    // PASSWORD_BCRYPT : algorithme sécurisé recommandé
-                    $hash = password_hash($mdp, PASSWORD_BCRYPT);
-
-                    // ── INSERTION EN BDD ──────────────
->>>>>>> new_m1
                     $stmt = $pdo->prepare("
                         INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe)
                         VALUES (:nom, :prenom, :email, :mdp)
@@ -73,21 +38,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         "email"  => $email,
                         "mdp"    => $hash
                     ]);
-<<<<<<< HEAD
-=======
-
-                    // ── REDIRECTION APRÈS INSCRIPTION ─
->>>>>>> new_m1
                     header("Location: connexion.php");
                     exit;
                 }
-
             } catch (PDOException $e) {
-                // Erreur SQL → on affiche le message pour debug
                 $error = "Erreur SQL : " . $e->getMessage();
             }
         }
-
     } else {
         $error = "Veuillez remplir tous les champs.";
     }
@@ -112,9 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
                 <div class="p-6 pt-0">
                     <?php if (isset($error)): ?>
-                        <div class="bg-red-100 text-red-700 p-3 rounded-md text-sm mb-4">
-                            <?= $error ?>
-                        </div>
+                        <div class="bg-red-100 text-red-700 p-3 rounded-md text-sm mb-4"><?= $error ?></div>
                     <?php endif; ?>
                     <form method="POST" action="">
                         <div class="grid gap-4">
@@ -142,4 +97,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     class="flex h-10 w-full rounded-md border px-3 py-2 text-sm">
                             </div>
                             <div class="grid gap-2">
-                                <label for="confirmation">Confirmation du mot de passe</label>
+                                <label for="confirmation">Confirmation</label>
+                                <input type="password" id="confirmation" name="confirmation" placeholder="Confirmez votre mot de passe" required
+                                    class="flex h-10 w-full rounded-md border px-3 py-2 text-sm">
+                            </div>
+                            <button type="submit"
+                                class="bg-zinc-900 text-white hover:bg-zinc-800 h-10 px-4 py-2 rounded-md transition">
+                                Créer un compte
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="mx-auto flex gap-1 text-sm">
+                <p>Déjà un compte ?</p>
+                <a href="connexion.php" class="underline text-purple-700">Se connecter</a>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>
