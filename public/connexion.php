@@ -1,36 +1,58 @@
 <?php
+//  public/connexion.php — Authentification utilisateur
+
 session_start();
-require_once "../config/database.php"; // fichier qui contient la connexion PDO
+require_once "../config/database.php";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $email = trim($_POST["email"]);
-    $password = trim($_POST["password"]);
 
+    // ── RÉCUPÉRATION DES CHAMPS ───────────────────────
+    $email    = trim($_POST["email"]);
+    $password = trim($_POST["mdp"]); // name="mdp" dans le formulaire
+
+    // ── VALIDATION BASIQUE ────────────────────────────
     if (!empty($email) && !empty($password)) {
-        // Préparer la requête
-        $stmt = $pdo->prepare("SELECT id, nom, prenom, email, mot_de_passe FROM utilisateurs WHERE email = :email");
+
+        // ── RECHERCHE UTILISATEUR PAR EMAIL ──────────
+        $stmt = $pdo->prepare("
+            SELECT id, nom, prenom, email, mot_de_passe, statut
+            FROM utilisateurs 
+            WHERE email = :email
+        ");
         $stmt->execute(["email" => $email]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        // ── VÉRIFICATION MOT DE PASSE ─────────────────
+        // password_verify compare le mdp saisi avec le hash bcrypt en BDD
         if ($user && password_verify($password, $user["mot_de_passe"])) {
-            // Authentification réussie
-            $_SESSION["user_id"] = $user["id"];
-            $_SESSION["user_nom"] = $user["nom"];
-            $_SESSION["user_prenom"] = $user["prenom"];
-            $_SESSION["user_email"] = $user["email"];
 
-            // Redirection vers le tableau de bord
-            header("Location: ../public/historique.php");
+            // Régénération ID session → sécurité anti-fixation
+            session_regenerate_id(true);
+
+            // ── STOCKAGE EN SESSION ───────────────────
+            $_SESSION["user_id"]     = $user["id"];
+            $_SESSION["user_nom"]    = $user["nom"];
+            $_SESSION["user_prenom"] = $user["prenom"];
+            $_SESSION["user_email"]  = $user["email"];
+            $_SESSION["role"]        = $user["role"] ?? "user";
+
+            // ── REDIRECTION SELON RÔLE ────────────────
+            if ($_SESSION["role"] === "admin") {
+                header("Location: ../admin/dashbord.php");
+            } else {
+                header("Location: dashbord.php");
+            }
             exit;
+
         } else {
             $error = "Email ou mot de passe incorrect.";
         }
+
     } else {
         $error = "Veuillez remplir tous les champs.";
     }
 }
 ?>
-
 
 
 <!DOCTYPE html>

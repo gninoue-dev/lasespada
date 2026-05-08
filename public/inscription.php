@@ -1,51 +1,65 @@
 <?php
-session_start();
-require_once "../config/database.php"; // connexion PDO
+  //  public/inscription.php — Création de compte utilisateur
 
-// Activer l'affichage des erreurs pour debug
-error_reporting(E_ALL);
-ini_set("display_errors", 1);
+  session_start();
+  require_once "../config/database.php";
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $nom = trim($_POST["nom"]);
-    $prenom = trim($_POST["prenom"]);
-    $email = trim($_POST["email"]);
-    $mdp = trim($_POST["mdp"]);
+  // Mode debug — à désactiver en production
+  error_reporting(E_ALL);
+  ini_set("display_errors", 1);
+
+  if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
+    // ── RÉCUPÉRATION ET NETTOYAGE DES CHAMPS ─────────
+    $nom          = trim($_POST["nom"]);
+    $prenom       = trim($_POST["prenom"]);
+    $email        = trim($_POST["email"]);
+    $mdp          = trim($_POST["mdp"]);
     $confirmation = trim($_POST["confirmation"]);
 
+    // ── VALIDATION : tous les champs obligatoires ─────
     if (!empty($nom) && !empty($prenom) && !empty($email) && !empty($mdp) && !empty($confirmation)) {
+
+        // ── VÉRIFICATION CORRESPONDANCE MOT DE PASSE ─
         if ($mdp !== $confirmation) {
             $error = "Les mots de passe ne correspondent pas.";
         } else {
             try {
-                // Vérifier si l'email existe déjà
+                // ── VÉRIFICATION EMAIL UNIQUE ─────────
+                // On ne peut pas avoir deux comptes avec le même email
                 $stmt = $pdo->prepare("SELECT id FROM utilisateurs WHERE email = :email");
                 $stmt->execute(["email" => $email]);
 
                 if ($stmt->fetch()) {
                     $error = "Cet email est déjà utilisé.";
                 } else {
-                    // Hash du mot de passe
+                    // ── HASHAGE DU MOT DE PASSE ───────
+                    // PASSWORD_BCRYPT : algorithme sécurisé recommandé
                     $hash = password_hash($mdp, PASSWORD_BCRYPT);
 
-                    // Insertion en BDD
-                    $stmt = $pdo->prepare("INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe) 
-                                           VALUES (:nom, :prenom, :email, :mdp)");
+                    // ── INSERTION EN BDD ──────────────
+                    $stmt = $pdo->prepare("
+                        INSERT INTO utilisateurs (nom, prenom, email, mot_de_passe)
+                        VALUES (:nom, :prenom, :email, :mdp)
+                    ");
                     $stmt->execute([
-                        "nom" => $nom,
+                        "nom"    => $nom,
                         "prenom" => $prenom,
-                        "email" => $email,
-                        "mdp" => $hash
+                        "email"  => $email,
+                        "mdp"    => $hash
                     ]);
 
-                    // Redirection vers la connexion
+                    // ── REDIRECTION APRÈS INSCRIPTION ─
                     header("Location: connexion.php");
                     exit;
                 }
+
             } catch (PDOException $e) {
+                // Erreur SQL → on affiche le message pour debug
                 $error = "Erreur SQL : " . $e->getMessage();
             }
         }
+
     } else {
         $error = "Veuillez remplir tous les champs.";
     }
