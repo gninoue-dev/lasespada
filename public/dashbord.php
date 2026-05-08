@@ -1,39 +1,72 @@
 <?php
-  session_start();
-  require_once "../config/database.php"; // connexion PDO
+// ══════════════════════════════════════════════════════
+//  public/dashboard.php — Tableau de bord utilisateur
+//  Accessible uniquement aux utilisateurs connectés
+// ══════════════════════════════════════════════════════
 
-  // Vérifier si l'utilisateur est connecté
-  if (!isset($_SESSION["user_id"])) {
-      header("Location: connexion.php");
-      exit;
-  }
+session_start();
+require_once "../config/database.php";
 
-  $user_id = $_SESSION["user_id"];
+// ── PROTECTION PAGE ───────────────────────────────────
+if (!isset($_SESSION["user_id"])) {
+    header("Location: connexion.php");
+    exit;
+}
 
-  // 🔹 Récupérer infos utilisateur
-  $stmt = $pdo->prepare("SELECT nom, prenom, statut, score_global FROM utilisateurs WHERE id = :id");
-  $stmt->execute(["id" => $user_id]);
-  $user = $stmt->fetch(PDO::FETCH_ASSOC);
+$user_id = $_SESSION["user_id"];
 
-  // 🔹 Récupérer historique des sinistres
-  $stmt = $pdo->prepare("SELECT COUNT(*) as total, 
-                                SUM(CASE WHEN date_sinistre >= DATE_SUB(NOW(), INTERVAL 12 MONTH) THEN 1 ELSE 0 END) as derniers12mois 
-                        FROM sinistres WHERE utilisateur_id = :id");
-  $stmt->execute(["id" => $user_id]);
-  $sinistres = $stmt->fetch(PDO::FETCH_ASSOC);
+// ── INFOS UTILISATEUR ─────────────────────────────────
+// Nom, prénom, statut du compte et score global de fraude
+$stmt = $pdo->prepare("
+    SELECT nom, prenom, statut, score_global 
+    FROM utilisateurs 
+    WHERE id = :id
+");
+$stmt->execute(["id" => $user_id]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-  // 🔹 Récupérer dernier sinistre pour mise à jour
-  $stmt = $pdo->prepare("SELECT MAX(date_declaration) as last_update FROM sinistres WHERE utilisateur_id = :id");
-  $stmt->execute(["id" => $user_id]);
-  $last_update = $stmt->fetch(PDO::FETCH_ASSOC);
+// Si utilisateur introuvable en BDD → déconnexion forcée
+if (!$user) {
+    session_destroy();
+    header("Location: connexion.php");
+    exit;
+}
 
-  // 🔹 Récupérer détails du score
-  $stmt = $pdo->prepare("SELECT type_sinistre, score_sinistre, statut FROM sinistres WHERE utilisateur_id = :id ORDER BY date_declaration DESC LIMIT 5");
-  $stmt->execute(["id" => $user_id]);
-  $details = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// ── STATISTIQUES SINISTRES ────────────────────────────
+// Total des sinistres + nombre sur les 12 derniers mois
+$stmt = $pdo->prepare("
+    SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN date_sinistre >= DATE_SUB(NOW(), INTERVAL 12 MONTH) THEN 1 ELSE 0 END) as derniers12mois
+    FROM sinistres 
+    WHERE utilisateur_id = :id
+");
+$stmt->execute(["id" => $user_id]);
+$sinistres = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// ── DERNIÈRE MISE À JOUR ──────────────────────────────
+// Date de la dernière déclaration de sinistre
+$stmt = $pdo->prepare("
+    SELECT MAX(date_declaration) as last_update 
+    FROM sinistres 
+    WHERE utilisateur_id = :id
+");
+$stmt->execute(["id" => $user_id]);
+$last_update = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// ── 5 DERNIERS SINISTRES ──────────────────────────────
+// Affichés dans le panneau "Score de risque"
+// Triés du plus récent au plus ancien
+$stmt = $pdo->prepare("
+    SELECT type_sinistre, score_sinistre, statut 
+    FROM sinistres 
+    WHERE utilisateur_id = :id 
+    ORDER BY date_declaration DESC 
+    LIMIT 5
+");
+$stmt->execute(["id" => $user_id]);
+$details = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -79,7 +112,7 @@
         <p class="population"><?= $sinistres["derniers12mois"] ?> sinistres sur les 12 derniers mois</p>
 
       </div>
-      <button id="exportBtn" class="btn">voir sinistres</button>
+      <a href="historiques.php"><button id="exportBtn" class="btn">voir sinistres</button></a>
     </div>
   </header>
 
@@ -131,7 +164,7 @@
 
     <footer class="footer">
       <div class="muted">
-       <button class="btn" style="font-size: 1rem;">Déclarer un sinistre +</button>
+       <a href="declarer.php"><button class="btn" style="font-size: 1rem;">Déclarer un sinistre +</button></a>
       </div>
     </footer>
   </main>

@@ -1,14 +1,25 @@
 <?php
+//  public/connexion.php — Authentification utilisateur
+
 session_start();
 require_once "../config/database.php";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+<<<<<<< HEAD
 
     $email = trim($_POST["email"]);
     $password = trim($_POST["password"]);
+=======
+>>>>>>> new_m1
 
+    // ── RÉCUPÉRATION DES CHAMPS ───────────────────────
+    $email    = trim($_POST["email"]);
+    $password = trim($_POST["mdp"]); // name="mdp" dans le formulaire
+
+    // ── VALIDATION BASIQUE ────────────────────────────
     if (!empty($email) && !empty($password)) {
 
+<<<<<<< HEAD
         $stmt = $pdo->prepare("
             SELECT id, nom, prenom, email, mot_de_passe
             FROM utilisateurs
@@ -19,9 +30,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             "email" => $email
         ]);
 
+=======
+        // ── RECHERCHE UTILISATEUR PAR EMAIL ──────────
+        $stmt = $pdo->prepare("
+            SELECT id, nom, prenom, email, mot_de_passe, statut
+            FROM utilisateurs 
+            WHERE email = :email
+        ");
+        $stmt->execute(["email" => $email]);
+>>>>>>> new_m1
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+        // ── VÉRIFICATION MOT DE PASSE ─────────────────
+        // password_verify compare le mdp saisi avec le hash bcrypt en BDD
         if ($user && password_verify($password, $user["mot_de_passe"])) {
+<<<<<<< HEAD
 
             $_SESSION["user_id"] = $user["id"];
             $_SESSION["user_nom"] = $user["nom"];
@@ -29,6 +52,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION["user_email"] = $user["email"];
 
             header("Location: ../public/historique.php");
+=======
+
+            // Régénération ID session → sécurité anti-fixation
+            session_regenerate_id(true);
+
+            // ── STOCKAGE EN SESSION ───────────────────
+            $_SESSION["user_id"]     = $user["id"];
+            $_SESSION["user_nom"]    = $user["nom"];
+            $_SESSION["user_prenom"] = $user["prenom"];
+            $_SESSION["user_email"]  = $user["email"];
+            $_SESSION["role"]        = $user["role"] ?? "user";
+
+            // ── REDIRECTION SELON RÔLE ────────────────
+            if ($_SESSION["role"] === "admin") {
+                header("Location: ../admin/dashbord.php");
+            } else {
+                header("Location: dashbord.php");
+            }
+>>>>>>> new_m1
             exit;
 
         } else {
@@ -41,6 +83,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 ?>
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> new_m1
 <!DOCTYPE html>
 <html lang="fr">
 
