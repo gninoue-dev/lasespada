@@ -30,6 +30,7 @@ $critiques = count(array_filter($alertes, fn($a) => $a["score_declencheur"] >= 7
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="../assets/css/gestion_alertes.css">
+  <link rel="stylesheet" href="../assets/css/animations.css">
 </head>
 
 <body>

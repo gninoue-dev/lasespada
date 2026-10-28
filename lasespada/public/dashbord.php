@@ -48,6 +48,7 @@ $details = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="../assets/css/dashbord.css">
 
+  <link rel="stylesheet" href="../assets/css/animations.css">
 </head>
 <body>
 

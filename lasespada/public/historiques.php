@@ -31,6 +31,7 @@ $sinistres = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <title>Document</title>
     <link rel="stylesheet" href="../assets/css/historique.css">
     <script src="../assets/js/historique.js" defer></script>
+  <link rel="stylesheet" href="../assets/css/animations.css">
 </head>
 <body>
     

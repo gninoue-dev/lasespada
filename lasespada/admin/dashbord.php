@@ -30,6 +30,7 @@ $derniers = $pdo->query("
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
   <link rel="stylesheet" href="../assets/css/dashbord2.css" />
   <script src="../assets/js/dashbord2.js" defer></script>
+  <link rel="stylesheet" href="../assets/css/animations.css">
 </head>
 
 <body>
