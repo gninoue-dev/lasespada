@@ -39,6 +39,7 @@ $refuses   = $pdo->query("SELECT COUNT(*) FROM sinistres WHERE statut = 'rejeté
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <link rel="stylesheet" href="../assets/css/liste_sinistres.css">
+  <link rel="stylesheet" href="../assets/css/animations.css">
 </head>
 <body>
 <div class="container">

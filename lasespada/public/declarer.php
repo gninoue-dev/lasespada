@@ -299,6 +299,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       border: 1px solid #f5c6cb;
     }
   </style>
+  <link rel="stylesheet" href="../assets/css/animations.css">
 </head>
 
 <body>

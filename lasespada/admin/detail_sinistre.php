@@ -47,6 +47,7 @@ $raisons = json_decode($s["raisons"] ?? '[]', true);
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <link rel="stylesheet" href="../assets/css/detail_sinistres.css">
+  <link rel="stylesheet" href="../assets/css/animations.css">
 </head>
 <body>
 <div class="container">

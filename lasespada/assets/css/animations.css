@@ -1,0 +1,68 @@
+/* ============================================
+   ANIMATIONS COMMUNES À TOUTES LES PAGES
+   Chargé après la feuille de chaque page. Ne change aucune mise en page :
+   seulement des entrées en douceur et des effets de survol.
+   ============================================ */
+
+/* Passage d'une page à l'autre : fondu glissé (navigateurs récents) */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: lsSortie .2s ease-in both; }
+::view-transition-new(root) { animation: lsEntree .38s cubic-bezier(.22,.9,.32,1) both; }
+@keyframes lsSortie { to { opacity: 0; transform: translateY(-10px); } }
+@keyframes lsEntree { from { opacity: 0; transform: translateY(16px); } }
+
+/* Entrées en cascade */
+.hero, .header, .topbar, .title-box, .filters, .alert, .panel, .table-wrapper, .empty-state, form {
+  animation: lsArrivee .5s cubic-bezier(.22,.9,.32,1) backwards;
+}
+.card, .client-card, .stats > *, .grid > *, .insights > * {
+  animation: lsArrivee .5s cubic-bezier(.22,.9,.32,1) backwards;
+}
+.stats > *:nth-child(2) { animation-delay: 0.15s; }
+.stats > *:nth-child(3) { animation-delay: 0.22s; }
+.stats > *:nth-child(4) { animation-delay: 0.29s; }
+.stats > *:nth-child(5) { animation-delay: 0.36s; }
+.stats > *:nth-child(6) { animation-delay: 0.43s; }
+.grid > *:nth-child(2) { animation-delay: 0.16s; }
+.grid > *:nth-child(3) { animation-delay: 0.22s; }
+.grid > *:nth-child(4) { animation-delay: 0.28s; }
+.grid > *:nth-child(5) { animation-delay: 0.34s; }
+.grid > *:nth-child(6) { animation-delay: 0.40s; }
+.grid > *:nth-child(7) { animation-delay: 0.46s; }
+.grid > *:nth-child(8) { animation-delay: 0.52s; }
+.grid > *:nth-child(9) { animation-delay: 0.58s; }
+.insights > *:nth-child(2) { animation-delay: 0.17s; }
+.insights > *:nth-child(3) { animation-delay: 0.24s; }
+.insights > *:nth-child(4) { animation-delay: 0.31s; }
+.insights > *:nth-child(5) { animation-delay: 0.38s; }
+.insights > *:nth-child(6) { animation-delay: 0.45s; }
+@keyframes lsArrivee { from { opacity: 0; transform: translateY(18px); } }
+
+/* Lignes de tableau qui arrivent l'une après l'autre */
+tbody tr { animation: lsLigne .35s ease-out backwards; }
+tbody tr:nth-child(2) { animation-delay: 0.18s; }
+tbody tr:nth-child(3) { animation-delay: 0.22s; }
+tbody tr:nth-child(4) { animation-delay: 0.26s; }
+tbody tr:nth-child(5) { animation-delay: 0.29s; }
+tbody tr:nth-child(6) { animation-delay: 0.33s; }
+tbody tr:nth-child(7) { animation-delay: 0.36s; }
+tbody tr:nth-child(8) { animation-delay: 0.40s; }
+tbody tr:nth-child(9) { animation-delay: 0.43s; }
+tbody tr:nth-child(10) { animation-delay: 0.47s; }
+tbody tr:nth-child(11) { animation-delay: 0.50s; }
+tbody tr:nth-child(12) { animation-delay: 0.54s; }
+@keyframes lsLigne { from { opacity: 0; transform: translateX(-10px); } }
+
+/* Survol et clic */
+.card, .client-card { transition: transform .25s cubic-bezier(.22,.9,.32,1), box-shadow .25s; }
+.card:hover, .client-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -16px rgba(0,0,0,.35); }
+.btn:active, .btn_submit:active, .btn-primary:active, .filter-btn:active { transform: scale(.97); }
+
+/* Dossiers en attente : la pastille respire pour attirer l'œil */
+.badge.pending, .pending.badge, .chip.pending { animation: lsAttente 1.8s ease-in-out infinite; }
+@keyframes lsAttente { 50% { box-shadow: 0 0 0 4px rgba(239,159,39,.22); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  @view-transition { navigation: none; }
+}
